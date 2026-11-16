@@ -1,0 +1,17 @@
+definition_version: 2
+env:
+  # Standardverdier lokalt. GitHub og dev-deploy.sh overstyrer med miljøvariabler.
+  SNOWFLAKE_DATABASE: TEAM_A_DEV
+  SNOWFLAKE_SCHEMA: APP
+entities:
+  load_data:
+    type: procedure
+    identifier:
+      name: LOAD_DATA
+      database: <% ctx.env.SNOWFLAKE_DATABASE %>
+      schema: <% ctx.env.SNOWFLAKE_SCHEMA %>
+    stage: <% ctx.env.SNOWFLAKE_DATABASE %>.<% ctx.env.SNOWFLAKE_SCHEMA %>.DEPLOY_STAGE
+    artifacts: ["app/"]
+    handler: "load_data.main"      # app/load_data.py, funksjonen main
+    signature: ""
+    returns: string

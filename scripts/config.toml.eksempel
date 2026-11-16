@@ -1,0 +1,13 @@
+# Kopier til ~/.snowflake/config.toml og fyll inn din Snowflake-bruker.
+# Ingen passord: innlogging skjer med Entra i nettleseren.
+# Kjør deretter: chmod 0600 ~/.snowflake/config.toml
+default_connection_name = "default"
+
+[connections.default]
+account = "PYA95845-KNOWITNORWAYPARTNER"
+user = "<din Snowflake-bruker, f.eks. PETTER.HUSEBY@KNOWIT.NO>"
+authenticator = "externalbrowser"
+role = "TEAM_A_DEVELOPER"
+warehouse = "TEAM_A_DEV_WH"
+database = "TEAM_A_DEV"
+client_store_temporary_credential = true

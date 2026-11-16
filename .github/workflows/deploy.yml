@@ -1,0 +1,82 @@
+name: Deploy
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write   # nødvendig for OIDC-token til Snowflake
+  contents: read
+
+jobs:
+  # Kjører på hver PR mot main -> dev-basen
+  deploy-dev:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    environment: dev
+    concurrency: dev
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_DATABASE: ${{ vars.SNOWFLAKE_DATABASE }}
+      SNOWFLAKE_SCHEMA: APP
+      SNOWFLAKE_WAREHOUSE: ${{ vars.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_ROLE: ${{ vars.SNOWFLAKE_ROLE }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - uses: snowflakedb/snowflake-actions@v3
+        with:
+          use-oidc: true
+          cli-version: "3.16"
+
+      - name: Bygg ingest
+        run: snow snowpark build --project ingest -x
+
+      - name: Deploy ingest-procedures
+        run: snow snowpark deploy --replace --project ingest -x
+
+      - name: Deploy Streamlit-app
+        run: snow streamlit deploy --replace --project streamlit -x
+
+      - name: Røyktest - kjør LOAD_DATA
+        run: snow sql -x -q "CALL APP.LOAD_DATA()"
+
+  # Kjører når PR-en er merget til main -> prod-basen
+  deploy-prod:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: prod
+    concurrency: prod
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_DATABASE: ${{ vars.SNOWFLAKE_DATABASE }}
+      SNOWFLAKE_SCHEMA: APP
+      SNOWFLAKE_WAREHOUSE: ${{ vars.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_ROLE: ${{ vars.SNOWFLAKE_ROLE }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - uses: snowflakedb/snowflake-actions@v3
+        with:
+          use-oidc: true
+          cli-version: "3.16"
+
+      - name: Bygg ingest
+        run: snow snowpark build --project ingest -x
+
+      - name: Deploy ingest-procedures
+        run: snow snowpark deploy --replace --project ingest -x
+
+      - name: Deploy Streamlit-app
+        run: snow streamlit deploy --replace --project streamlit -x
+
+      - name: Kontroller at objektene finnes
+        run: |
+          snow sql -x -q "SHOW PROCEDURES LIKE 'LOAD_DATA' IN SCHEMA APP"
+          snow sql -x -q "SHOW STREAMLITS LIKE 'TEAM_A_DASHBOARD' IN SCHEMA APP"
