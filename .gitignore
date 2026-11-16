@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Bygg fra snow snowpark build
+output/
+*.zip
+
+# Lokale tilkoblinger og hemmeligheter
+config.toml
+.env
+
+# OS og editor
+.DS_Store
+.vscode/
