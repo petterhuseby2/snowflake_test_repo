@@ -1,0 +1,18 @@
+definition_version: 2
+env:
+  # Standardverdier lokalt. GitHub og dev-deploy.sh overstyrer med miljøvariabler.
+  SNOWFLAKE_DATABASE: TEAM_A_DEV
+  SNOWFLAKE_SCHEMA: APP
+  SNOWFLAKE_WAREHOUSE: TEAM_A_DEV_WH
+entities:
+  dashboard:
+    type: streamlit
+    identifier:
+      name: TEAM_A_DASHBOARD
+      database: <% ctx.env.SNOWFLAKE_DATABASE %>
+      schema: <% ctx.env.SNOWFLAKE_SCHEMA %>
+    query_warehouse: <% ctx.env.SNOWFLAKE_WAREHOUSE %>
+    main_file: streamlit_app.py
+    artifacts:
+      - streamlit_app.py
+      - environment.yml
